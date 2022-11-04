@@ -1,31 +1,36 @@
 use deku::prelude::*;
 
-#[derive(Debug, PartialEq, DekuRead, DekuWrite)]
-#[deku(endian = "big")]
-struct DekuTest {
-
-	#[deku(bits = "4")]
-	field_a: u8,
-
-	#[deku(bits = "4")]
-	field_b: u8,
-	field_c: u16,
-}
+use mud::header::DnsHeader;
 
 fn main() {
 
-	let data: Vec<u8> = vec![0b0110_1001, 0xBE, 0xEF];
-	let (_rest, mut val) = DekuTest::from_bytes((data.as_ref(), 0)).unwrap();
+	let data: Vec<u8> = vec![
 
-	assert_eq!(DekuTest {
-		field_a: 0b0110,
-		field_b: 0b1001,
-		field_c: 0xBEEF,
-	}, val);
+		0b0000_0101,
+		0b0011_1001,	// ID
 
-	val.field_b = 0xF;
-	val.field_c = 0xC0FE;
+		0b1000_0000 |	// QR
+		0b0000_0000 |	// OPCODE
+		0b0000_0000 |	// AA
+		0b0000_0000 |	// TC
+		0b0000_0001,	// RD
 
-	let data_out = val.to_bytes().unwrap();
-	assert_eq!(vec![0b0110_1111, 0xC0, 0xFE], data_out);
+		0b0000_0000 |	// RA
+		0b0000_0000 |	// Z
+		0b0000_0000,	// RCODE
+
+		0,			// QDCOUNT
+		1,			// QDCOUNT
+		0,			// ANCOUNT
+		0,			// ANCOUNT
+		0,			// NSCOUNT
+		0,			// NSCOUNT
+		0,			// ARCOUNT
+		0,			// ARCOUNT
+	];
+
+	let (_res, val) = DnsHeader::from_bytes((data.as_ref(), 0)).unwrap();
+
+
+	println!("{:?}", val);
 }
