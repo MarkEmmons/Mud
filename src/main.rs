@@ -1,6 +1,6 @@
 use deku::prelude::*;
 
-use mud::header::DnsHeader;
+use mud::packet::header::DnsHeader;
 
 fn main() {
 
