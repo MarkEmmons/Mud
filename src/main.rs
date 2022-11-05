@@ -2,6 +2,8 @@ use std::net::UdpSocket;
 
 use clap::Parser;
 use deku::prelude::*;
+use tracing::{event, span, Level};
+use tracing_subscriber;
 
 use mud::args::MudOpts;
 use mud::packet::{
@@ -11,6 +13,11 @@ use mud::packet::{
 };
 
 fn main() {
+
+	tracing_subscriber::fmt::init();
+
+	let span = span!(Level::TRACE, "Mud");
+	let _enter = span.enter();
 
 	let args = MudOpts::parse();
 
@@ -57,16 +64,15 @@ fn main() {
 			req[i] = req_vec[i];
 		}
 
-		//println!("Sending buffer...");
+		event!(Level::INFO, "Sending buffer...");
 		socket.send_to(&req[0..req_len], "8.8.8.8:53")
 			.expect("Could not send data");
 
-		//println!("Waiting for response...");
+		event!(Level::INFO, "Waiting for response...");
 		let (number_of_bytes, _src_addr) = socket.recv_from(&mut res)
 			.expect("Didn't receive data");
 
-		let modified_message = String::
+		let _modified_message = String::
 			from_utf8_lossy(&mut res[..number_of_bytes]);
-		//println!("{}", modified_message);
 	}
 }
