@@ -5,7 +5,7 @@ use deku::prelude::*;
 use tracing::{event, span, Level};
 use tracing_subscriber;
 
-use mud::args::MudOpts;
+use mud::opts::MudOpts;
 use mud::packet::DnsPacket;
 
 fn main() {

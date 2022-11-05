@@ -1,2 +1,2 @@
-pub mod args;
+pub mod opts;
 pub mod packet;

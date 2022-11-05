@@ -3,7 +3,7 @@ use deku::prelude::*;
 use header::DnsHeader;
 use question::{DnsQuestion, encode_domain};
 
-use crate::args::MudOpts;
+use crate::opts::MudOpts;
 
 pub mod header;
 pub mod question;
@@ -22,11 +22,13 @@ impl DnsPacket {
 
 	pub fn new_question(opts: MudOpts) -> DnsPacket {
 
+		const ID: u16 = 326;
+
 		// assert(opts.name)
 
 		DnsPacket {
 			header: DnsHeader {
-				id: 49_618,
+				id: ID,
 				qr: 0b0,
 				opcode: 0b0000,
 				aa: 0b0,
