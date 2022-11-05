@@ -20,7 +20,7 @@ pub struct DnsPacket {
 
 impl DnsPacket {
 
-	pub fn new_question(opts: MudOpts) -> DnsPacket {
+	pub fn new_question(opts: &MudOpts) -> DnsPacket {
 
 		const ID: u16 = 326;
 
