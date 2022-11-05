@@ -6,11 +6,7 @@ use tracing::{event, span, Level};
 use tracing_subscriber;
 
 use mud::args::MudOpts;
-use mud::packet::{
-	DnsPacket,
-	header::DnsHeader,
-	question::{DnsQuestion, encode_domain}
-};
+use mud::packet::DnsPacket;
 
 fn main() {
 
@@ -19,30 +15,13 @@ fn main() {
 	let span = span!(Level::TRACE, "Mud");
 	let _enter = span.enter();
 
-	let args = MudOpts::parse();
+	let opts = MudOpts::parse();
 
-	let packet = DnsPacket {
-		header: DnsHeader {
-			id: 49_618,
-			qr: 0b0,
-			opcode: 0b0000,
-			aa: 0b0,
-			tc: 0b0,
-			rd: 0b1,
-			ra: 0b0,
-			z: 0b010,
-			rcode: 0b0000,
-			qd_count: 1,
-			an_count: 0,
-			ns_count: 0,
-			ar_count: 0,
-		},
-		question: DnsQuestion {
-			qname: encode_domain(&args.name),
-			qtype: 0x0001,
-			qclass: 0x0001,
-		}
-	};
+	let packet = DnsPacket::new_question(opts);
+
+	// let response = client::send_query(opts, packet);
+
+	// response.print_response();
 
 	// UDP
 	const BUF_MAX: usize = 4096;
@@ -72,7 +51,8 @@ fn main() {
 		let (number_of_bytes, _src_addr) = socket.recv_from(&mut res)
 			.expect("Didn't receive data");
 
-		let _modified_message = String::
+		let modified_message = String::
 			from_utf8_lossy(&mut res[..number_of_bytes]);
+		println!("{}", modified_message);
 	}
 }
