@@ -4,32 +4,32 @@ use deku::prelude::*;
 #[deku(endian = "big")]
 pub struct DnsHeader {
 
-	id: u16,
+	pub id: u16,
 
 	#[deku(bits = "1")]
-	qr: u8,
+	pub qr: u8,
 
 	#[deku(bits = "4")]
-	opcode: u8,
+	pub opcode: u8,
 
 	#[deku(bits = "1")]
-	aa: u8,
+	pub aa: u8,
 	#[deku(bits = "1")]
-	tc: u8,
+	pub tc: u8,
 	#[deku(bits = "1")]
-	rd: u8,
+	pub rd: u8,
 	#[deku(bits = "1")]
-	ra: u8,
+	pub ra: u8,
 
 	#[deku(bits = "3")]
-	z: u8,
+	pub z: u8,
 	#[deku(bits = "4")]
-	rcode: u8,
+	pub rcode: u8,
 
-	qd_count: u16,
-	an_count: u16,
-	ns_count: u16,
-	ar_count: u16,
+	pub qd_count: u16,
+	pub an_count: u16,
+	pub ns_count: u16,
+	pub ar_count: u16,
 }
 
 #[cfg(test)]

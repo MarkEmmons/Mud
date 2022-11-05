@@ -1,18 +1,19 @@
 use deku::prelude::*;
 
-#[derive(Debug, PartialEq, DekuRead, DekuWrite)]
+#[deku_derive(DekuRead, DekuWrite)]
+#[derive(Debug, PartialEq)]
 #[deku(endian = "big")]
 pub struct DnsQuestion {
 
-	#[deku(update = "self.qname.len()")]
-	count: u8,
+	#[deku(temp)]
+	pub count: u8,
 
 	#[deku(count = "count")]
-	qname: Vec<u8>,
+	pub qname: Vec<u8>,
 
-	qtype: u16,
+	pub qtype: u16,
 
-	qclass: u16,
+	pub qclass: u16,
 }
 
 pub fn encode_domain(domain: &str) -> Vec<u8> {
