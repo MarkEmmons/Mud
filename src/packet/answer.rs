@@ -75,5 +75,40 @@ mod tests {
 
 		assert_eq!(rest.len(), 0);
 		assert_eq!(offset, 1);
+
+		let dater: Vec<u8> = vec![
+
+			// rdata
+			0b1000_0000,
+			0b0100_0000,
+			0b0010_0000,
+
+			// Atype
+			0b0000_0000,
+			0b0000_0001,
+
+			// Class
+			0b0000_0000,
+			0b0000_0001,
+
+			// TTL
+			0b0000_0000,
+			0b0000_0000,
+			0b0000_0000,
+			0b0000_0000,
+
+			// rdlength = 5
+			0b0000_0000,
+			0b0000_0101,
+
+			// rdata
+			0b0000_0001,
+			0b0000_0010,
+			0b0000_0100,
+			0b0000_1000,
+			0b0001_0000,
+		];
+
+		assert_eq!(packet.to_bytes().unwrap(), dater);
 	}
 }
