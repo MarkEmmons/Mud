@@ -2,20 +2,22 @@ use deku::prelude::*;
 
 use header::DnsHeader;
 use question::{DnsQuestion, encode_domain};
+use answer::DnsAnswer;
 
 use crate::opts::MudOpts;
 
 pub mod header;
 pub mod question;
+pub mod answer;
 
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
 pub struct DnsPacket {
 
 	pub header: DnsHeader,
 	pub question: DnsQuestion,
-	//answer: DnsAnswer,
-	//authority: DnsAuthority,
-	//additional: DnsAdditional,
+	//pub answer: DnsAnswer,
+	//pub authority: DnsAuthority,
+	//pub additional: DnsAdditional,
 }
 
 impl DnsPacket {
@@ -48,5 +50,10 @@ impl DnsPacket {
 				qclass: 0x0001,
 			}
 		}
+	}
+
+	pub fn print_response(&self) {
+
+		println!("{:?}", self);
 	}
 }
