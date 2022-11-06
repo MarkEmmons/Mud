@@ -6,9 +6,8 @@ use tracing::{event, Level};
 use crate::opts::MudOpts;
 use crate::packet::DnsPacket;
 
-pub fn send_query(_opts: &MudOpts, packet: DnsPacket) {
+pub fn send_query(_opts: &MudOpts, packet: DnsPacket) -> Result<DnsPacket, std::fmt::Error> {
 
-	// UDP
 	const BUF_MAX: usize = 4096;
 	let mut req  = [0; BUF_MAX];
 	let mut res  = [0; BUF_MAX];
@@ -29,6 +28,8 @@ pub fn send_query(_opts: &MudOpts, packet: DnsPacket) {
 		}
 
 		event!(Level::INFO, "Sending buffer...");
+		//socket.send_to(req_vec.as_ref(), "8.8.8.8:53")
+		//	.expect("Could not send data");
 		socket.send_to(&req[0..req_len], "8.8.8.8:53")
 			.expect("Could not send data");
 
@@ -36,8 +37,17 @@ pub fn send_query(_opts: &MudOpts, packet: DnsPacket) {
 		let (number_of_bytes, _src_addr) = socket.recv_from(&mut res)
 			.expect("Didn't receive data");
 
+		//let (_rest, result) = DnsPacket::from_bytes(
+		//	(&res[..number_of_bytes], number_of_bytes)
+		//).unwrap();
 		let modified_message = String::
 			from_utf8_lossy(&mut res[..number_of_bytes]);
 		println!("{}", modified_message);
+
+		Ok(packet)
+
+	} else {
+
+		Err(std::fmt::Error)
 	}
 }

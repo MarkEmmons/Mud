@@ -2,7 +2,7 @@ use clap::Parser;
 use tracing::{span, Level};
 use tracing_subscriber;
 
-use mud::client::udp_client;
+use mud::client;
 use mud::opts::MudOpts;
 use mud::packet::DnsPacket;
 
@@ -17,9 +17,8 @@ fn main() {
 
 	let packet = DnsPacket::new_question(&opts);
 
-	udp_client::send_query(&opts, packet);
-	// let response = client::send_query(opts, packet);
+	let response = client::send_query(&opts, packet)
+		.expect("Failed to receive response");
 
-	// response.print_response();
-
+	response.print_response();
 }
