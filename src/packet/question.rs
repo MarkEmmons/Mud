@@ -1,14 +1,13 @@
 use deku::prelude::*;
 
+use crate::packet::DnsPacket;
+
 #[deku_derive(DekuRead, DekuWrite)]
 #[derive(Debug, PartialEq)]
 #[deku(endian = "big")]
 pub struct DnsQuestion {
 
-	#[deku(temp)]
-	pub count: u8,
-
-	#[deku(count = "count")]
+	#[deku(reader = "DnsPacket::read_name(deku::rest)")]
 	pub qname: Vec<u8>,
 
 	pub qtype: u16,

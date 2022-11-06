@@ -1,4 +1,5 @@
 use deku::prelude::*;
+use deku::bitvec::{BitSlice, Msb0};
 
 use header::DnsHeader;
 use question::{DnsQuestion, encode_domain};
@@ -21,6 +22,30 @@ pub struct DnsPacket {
 }
 
 impl DnsPacket {
+
+	pub fn read_name(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, Vec<u8>), DekuError> {
+
+		let mut name: Vec<u8> = Vec::new();
+
+		let (mut remainder, mut label_length) = u8::read(rest, ())?;
+
+		let mut label_byte: u8;
+		name.push(label_length);
+
+		while label_length > 0 {
+
+			for _ in 0..label_length {
+
+				(remainder, label_byte) = u8::read(remainder, ())?;
+				name.push(label_byte);
+			}
+
+			(remainder, label_length) = u8::read(remainder, ())?;
+			name.push(label_length);
+		}
+
+		Ok((remainder, name))
+	}
 
 	pub fn new_question(opts: &MudOpts) -> DnsPacket {
 
