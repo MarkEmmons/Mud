@@ -12,6 +12,8 @@ pub mod header;
 pub mod question;
 pub mod answer;
 
+// TODO: Handle variable amounts of resource records
+// TODO: Support for authority and additional records
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
 pub struct DnsPacket {
 
@@ -69,8 +71,6 @@ impl DnsPacket {
 
 		const ID: u16 = 326;
 
-		// assert(opts.name)
-
 		DnsPacket {
 			header: DnsHeader {
 				id: ID,
@@ -105,18 +105,41 @@ impl DnsPacket {
 
 	pub fn print_response(&self) {
 
-		println!("{:?}", self);
+		println!("; <<>> Mud 0.0.1 <<>> TODO");
+		println!(";; global options: TODO");
 
-		//let path = Path::new("response");
-		//let mut file = match File::create(&path) {
-		//	Err(e) => panic!("Could not create {}: {}", path.display(), e),
-		//	Ok(file) => file,
-		//};
+		println!(";; Got answer:");
+		println!(";; ->>HEADER<<- opcode: {}, status: {}, id: {}",
+			// TODO: Translate codes
+			self.header.opcode,
+			self.header.rcode,
+			self.header.id,
+		);
 
-		//match file.write_all(&res[..number_of_bytes]) {
-		//	Err(e) => panic!("Couldn't write to {}: {}", path.display(), e),
-		//	Ok(_) => event!(Level::INFO, "Sending buffer..."),
-		//}
+		let mut flags = String::new();
+		if self.header.qr == 1 { flags += " qr"; }
+		if self.header.aa == 1 { flags += " aa"; }
+		if self.header.tc == 1 { flags += " tc"; }
+		if self.header.rd == 1 { flags += " rd"; }
+		if self.header.ra == 1 { flags += " ra"; }
+
+		println!(
+			";; flags:{}; QUERY: {}, ANSWER: {}, AUTHORITY: {}, ADDITIONAL: {}",
+			flags,
+			self.header.qd_count,
+			self.header.an_count,
+			self.header.ns_count,
+			self.header.ar_count,
+		);
+
+		println!("");
+		println!(";; QUESTION SECTION:");
+		println!("");
+		println!(";; ANSWER SECTION:");
+		println!("{:?}", self.answer.rdata);
+		println!("");
+		println!(";; TODO: STATS");
+		println!("");
 	}
 }
 
