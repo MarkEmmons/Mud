@@ -5,7 +5,7 @@ use crate::packet::DnsPacket;
 #[deku_derive(DekuRead, DekuWrite)]
 #[derive(Debug, PartialEq)]
 #[deku(endian = "big")]
-pub struct DnsAnswer {
+pub struct DnsResource {
 
 	#[deku(reader = "DnsPacket::read_name(deku::rest)")]
 	pub name: Vec<u8>,
@@ -28,7 +28,7 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn it_creates_an_answer_with_the_correct_rdata_full() {
+	fn it_creates_a_resource_with_the_correct_rdata_full() {
 
 		let data: Vec<u8> = vec![
 
@@ -75,7 +75,7 @@ mod tests {
 			0b0001_0000,
 		];
 
-		let ((rest, offset), packet) = DnsAnswer::from_bytes(
+		let ((rest, offset), packet) = DnsResource::from_bytes(
 			(data.as_ref(), 0)
 		).unwrap();
 
@@ -86,7 +86,7 @@ mod tests {
 	}
 
 	#[test]
-	fn it_creates_an_answer_with_the_correct_rdata_compressed() {
+	fn it_creates_a_resource_with_the_correct_rdata_compressed() {
 
 		let data: Vec<u8> = vec![
 
@@ -119,7 +119,7 @@ mod tests {
 			0b1111_0110,
 		];
 
-		let ((rest, offset), packet) = DnsAnswer::from_bytes(
+		let ((rest, offset), packet) = DnsResource::from_bytes(
 			(data.as_ref(), 0)
 		).unwrap();
 

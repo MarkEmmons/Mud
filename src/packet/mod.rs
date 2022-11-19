@@ -4,24 +4,30 @@ use tracing::{event, Level};
 
 use header::DnsHeader;
 use question::{DnsQuestion, encode_domain};
-use answer::DnsAnswer;
+use resource::DnsResource;
 
 use crate::opts::MudOpts;
 
 pub mod header;
 pub mod question;
-pub mod answer;
+pub mod resource;
 
-// TODO: Handle variable amounts of resource records
-// TODO: Support for authority and additional records
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
 pub struct DnsPacket {
 
 	pub header: DnsHeader,
-	pub question: DnsQuestion,
-	pub answer: DnsAnswer,
-	//pub authority: DnsAuthority,
-	//pub additional: DnsAdditional,
+
+	#[deku(count = "header.qd_count")]
+	pub question: Vec<DnsQuestion>,
+
+	#[deku(count = "header.an_count")]
+	pub answer: Vec<DnsResource>,
+
+	#[deku(count = "header.ns_count")]
+	pub authority: Vec<DnsResource>,
+
+	#[deku(count = "header.ar_count")]
+	pub additional: Vec<DnsResource>,
 }
 
 impl DnsPacket {
@@ -35,33 +41,32 @@ impl DnsPacket {
 		let (mut remainder, mut label_length) = u8::read(rest, ())?;
 		name.push(label_length);
 
-		// FIX: Pointers can come after labels
-		// Initial octet indicates a pointer, not a label
-		if label_length >= 0xC {
+		while label_length > 0 {
 
-			(remainder, label_byte) = u8::read(remainder, ())?;
-			name.push(label_byte);
+			// Initial octet indicates a pointer, not a label
+			if label_length >= 0xC {
 
-			let offset: u16 = (
-				((label_length as u16) << 8) + label_byte as u16
-			) & 0x3FFF;
+				(remainder, label_byte) = u8::read(remainder, ())?;
+				name.push(label_byte);
 
-			// TODO: Use an enum of Vec<u8>, *ptr to domain name
-			event!(Level::INFO, "Domain name at offset={}", offset);
+				let offset: u16 = (
+					((label_length as u16) << 8) + label_byte as u16
+				) & 0x3FFF;
 
-		} else {
-
-			while label_length > 0 {
-
-				for _ in 0..label_length {
-
-					(remainder, label_byte) = u8::read(remainder, ())?;
-					name.push(label_byte);
-				}
-
-				(remainder, label_length) = u8::read(remainder, ())?;
-				name.push(label_length);
+				// TODO: Use an enum of Vec<u8>, *ptr to domain name
+				event!(Level::INFO, "Domain name at offset={}", offset);
+				break;
 			}
+
+			// Read name from label
+			for _ in 0..label_length {
+
+				(remainder, label_byte) = u8::read(remainder, ())?;
+				name.push(label_byte);
+			}
+
+			(remainder, label_length) = u8::read(remainder, ())?;
+			name.push(label_length);
 		}
 
 		Ok((remainder, name))
@@ -87,19 +92,14 @@ impl DnsPacket {
 				ns_count: 0,
 				ar_count: 0,
 			},
-			question: DnsQuestion {
+			question: vec![DnsQuestion {
 				qname: encode_domain(&opts.name),
 				qtype: 0x0001,
 				qclass: 0x0001,
-			},
-			answer: DnsAnswer {
-				name: vec![0x0],
-				atype: 0x00,
-				class: 0x00,
-				ttl: 0x0000,
-				rdlength: 0x00,
-				rdata: vec![0x0],
-			}
+			}],
+			answer: Vec::new(),
+			authority: Vec::new(),
+			additional: Vec::new(),
 		}
 	}
 
@@ -134,9 +134,18 @@ impl DnsPacket {
 
 		println!("");
 		println!(";; QUESTION SECTION:");
-		println!("");
-		println!(";; ANSWER SECTION:");
-		println!("{:?}", self.answer.rdata);
+
+		if self.answer.len() > 0 {
+
+			println!("");
+			println!(";; ANSWER SECTION:");
+
+			for answer in self.answer.iter() {
+
+				println!("{:?}", answer.rdata);
+			}
+		}
+
 		println!("");
 		println!(";; TODO: STATS");
 		println!("");
