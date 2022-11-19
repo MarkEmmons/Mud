@@ -28,7 +28,7 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn it_creates_an_answer_with_the_correct_rdata() {
+	fn it_creates_an_answer_with_the_correct_rdata_full() {
 
 		let data: Vec<u8> = vec![
 
@@ -82,6 +82,52 @@ mod tests {
 		println!("{:?}", packet);
 
 		assert_eq!(rest.len(), 0);
-		assert_eq!(offset, 1);
+		assert_eq!(offset, 0);
+	}
+
+	#[test]
+	fn it_creates_an_answer_with_the_correct_rdata_compressed() {
+
+		let data: Vec<u8> = vec![
+
+			// Pointer/Offset
+			0b1100_0000,
+			0b0000_1100,
+
+			// Atype
+			0b0000_0000,
+			0b0000_0001,
+
+			// Class
+			0b0000_0000,
+			0b0000_0001,
+
+			// TTL
+			0b0000_0000,
+			0b0000_0000,
+			0b0000_0010,
+			0b0101_0100,
+
+			// rdlength = 4
+			0b0000_0000,
+			0b0000_0100,
+
+			// rdata
+			0b0101_1111,
+			0b1101_1001,
+			0b1010_0011,
+			0b1111_0110,
+		];
+
+		let ((rest, offset), packet) = DnsAnswer::from_bytes(
+			(data.as_ref(), 0)
+		).unwrap();
+
+		println!("{:?}", packet);
+		assert_eq!(packet.rdlength, 4);
+		assert_eq!(packet.rdata.len(), 4);
+
+		assert_eq!(rest.len(), 0);
+		assert_eq!(offset, 0);
 	}
 }

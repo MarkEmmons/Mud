@@ -1,5 +1,5 @@
 use clap::Parser;
-use tracing::{span, Level};
+use tracing::{event, span, Level};
 use tracing_subscriber;
 
 use mud::client;
@@ -13,12 +13,16 @@ fn main() {
 	let span = span!(Level::TRACE, "Mud");
 	let _enter = span.enter();
 
+	event!(Level::INFO, "Parsing user arguments.");
 	let opts = MudOpts::parse();
 
+	event!(Level::INFO, "Creating a question packet.");
 	let packet = DnsPacket::new_question(&opts);
 
+	event!(Level::INFO, "Sending question packet.");
 	let response = client::send_query(&opts, packet)
 		.expect("Failed to receive response");
 
+	event!(Level::INFO, "Printing response info.");
 	response.print_response();
 }
