@@ -32,6 +32,37 @@ pub struct DnsHeader {
 	pub ar_count: u16,
 }
 
+impl DnsHeader {
+
+	pub fn print(&self) {
+
+		println!(";; ->>HEADER<<- opcode: {}, status: {}, id: {}",
+			// TODO: Translate codes
+			self.opcode,
+			self.rcode,
+			self.id,
+		);
+
+		let mut flags = String::new();
+		if self.qr == 1 { flags += " qr"; }
+		if self.aa == 1 { flags += " aa"; }
+		if self.tc == 1 { flags += " tc"; }
+		if self.rd == 1 { flags += " rd"; }
+		if self.ra == 1 { flags += " ra"; }
+
+		println!(
+			";; flags:{}; QUERY: {}, ANSWER: {}, AUTHORITY: {}, ADDITIONAL: {}",
+			flags,
+			self.qd_count,
+			self.an_count,
+			self.ns_count,
+			self.ar_count,
+		);
+
+		println!("");
+	}
+}
+
 #[cfg(test)]
 mod tests {
 

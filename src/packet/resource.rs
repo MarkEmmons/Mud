@@ -22,6 +22,18 @@ pub struct DnsResource {
 	pub rdata: Vec<u8>,
 }
 
+impl DnsResource {
+
+	pub fn print(&self) {
+
+		println!(";; ANSWER SECTION:");
+
+		println!("{:?}", self.rdata);
+
+		println!("");
+	}
+}
+
 #[cfg(test)]
 mod tests {
 

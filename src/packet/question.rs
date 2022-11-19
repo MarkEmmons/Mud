@@ -15,6 +15,15 @@ pub struct DnsQuestion {
 	pub qclass: u16,
 }
 
+impl DnsQuestion {
+
+	pub fn print(&self) {
+
+		println!(";; QUESTION SECTION:");
+		println!("");
+	}
+}
+
 pub fn encode_domain(domain: &str) -> Vec<u8> {
 
 	let mut qname: Vec<u8> = Vec::new();

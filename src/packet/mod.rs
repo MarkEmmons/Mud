@@ -109,44 +109,13 @@ impl DnsPacket {
 		println!(";; global options: TODO");
 
 		println!(";; Got answer:");
-		println!(";; ->>HEADER<<- opcode: {}, status: {}, id: {}",
-			// TODO: Translate codes
-			self.header.opcode,
-			self.header.rcode,
-			self.header.id,
-		);
+		self.header.print();
 
-		let mut flags = String::new();
-		if self.header.qr == 1 { flags += " qr"; }
-		if self.header.aa == 1 { flags += " aa"; }
-		if self.header.tc == 1 { flags += " tc"; }
-		if self.header.rd == 1 { flags += " rd"; }
-		if self.header.ra == 1 { flags += " ra"; }
+		for q in self.question.iter() { q.print(); }
+		for a in self.answer.iter() { a.print(); }
+		for a in self.authority.iter() { a.print(); }
+		for a in self.additional.iter() { a.print(); }
 
-		println!(
-			";; flags:{}; QUERY: {}, ANSWER: {}, AUTHORITY: {}, ADDITIONAL: {}",
-			flags,
-			self.header.qd_count,
-			self.header.an_count,
-			self.header.ns_count,
-			self.header.ar_count,
-		);
-
-		println!("");
-		println!(";; QUESTION SECTION:");
-
-		if self.answer.len() > 0 {
-
-			println!("");
-			println!(";; ANSWER SECTION:");
-
-			for answer in self.answer.iter() {
-
-				println!("{:?}", answer.rdata);
-			}
-		}
-
-		println!("");
 		println!(";; TODO: STATS");
 		println!("");
 	}
