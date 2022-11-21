@@ -1,9 +1,10 @@
 use deku::prelude::*;
+use serde::{Serialize, Deserialize};
 
 use crate::packet::DnsPacket;
 
 #[deku_derive(DekuRead, DekuWrite)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[deku(endian = "big")]
 pub struct DnsQuestion {
 
@@ -24,27 +25,31 @@ impl DnsQuestion {
 	}
 }
 
-pub fn encode_domain(domain: &str) -> Vec<u8> {
+// Static Methods
+impl DnsQuestion {
 
-	let mut qname: Vec<u8> = Vec::new();
+	pub fn encode_domain(domain: &str) -> Vec<u8> {
 
-	for label in domain.split('.') {
+		let mut qname: Vec<u8> = Vec::new();
 
-		// Label Length
-		qname.push(label
-			.len()
-			.try_into()
-			.unwrap()
-		);
+		for label in domain.split('.') {
 
-		// Label Bytes
-		for byte in label.bytes() {
-			qname.push(byte);
+			// Label Length
+			qname.push(label
+				.len()
+				.try_into()
+				.unwrap()
+			);
+
+			// Label Bytes
+			for byte in label.bytes() {
+				qname.push(byte);
+			}
 		}
+
+		// Null-label
+		qname.push(0x0);
+
+		qname
 	}
-
-	// Null-label
-	qname.push(0x0);
-
-	qname
 }

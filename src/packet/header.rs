@@ -1,6 +1,7 @@
 use deku::prelude::*;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, PartialEq, DekuRead, DekuWrite)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, DekuRead, DekuWrite)]
 #[deku(endian = "big")]
 pub struct DnsHeader {
 
@@ -36,10 +37,34 @@ impl DnsHeader {
 
 	pub fn print(&self) {
 
+		let opcode = match self.opcode {
+
+			0 => "QUERY",
+			1 => "IQUERY",
+			2 => "STATUS",
+			3..=15 => "RESERVED",
+			_ => panic!("Could not match opcode: {}", self.opcode),
+		};
+
+		let rcode = match self.rcode {
+
+			0 => "NOERROR",
+			1 => "FORMERR",
+			2 => "SERVFAIL",
+			3 => "NXDOMAIN",
+			4 => "NOTIMP",
+			5 => "REFUSED",
+			6 => "YXDOMAIN",
+			7 => "XRRSET",
+			8 => "NOTAUTH",
+			9 => "NOTZONE",
+			10..=15 => "RESERVED",
+			_ => panic!("Could not match rcode: {}", self.rcode),
+		};
+
 		println!(";; ->>HEADER<<- opcode: {}, status: {}, id: {}",
-			// TODO: Translate codes
-			self.opcode,
-			self.rcode,
+			opcode,
+			rcode,
 			self.id,
 		);
 

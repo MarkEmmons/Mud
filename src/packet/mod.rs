@@ -1,9 +1,10 @@
 use deku::prelude::*;
 use deku::bitvec::{BitSlice, Msb0};
+use serde::{Serialize, Deserialize};
 use tracing::{event, Level};
 
 use header::DnsHeader;
-use question::{DnsQuestion, encode_domain};
+use question::DnsQuestion;
 use resource::DnsResource;
 
 use crate::opts::MudOpts;
@@ -12,16 +13,18 @@ pub mod header;
 pub mod question;
 pub mod resource;
 
-#[derive(Debug, PartialEq, DekuRead, DekuWrite)]
+//pub mod name;
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, DekuRead, DekuWrite)]
 pub struct DnsPacket {
 
 	pub header: DnsHeader,
 
 	#[deku(count = "header.qd_count")]
-	pub question: Vec<DnsQuestion>,
+	pub questions: Vec<DnsQuestion>,
 
 	#[deku(count = "header.an_count")]
-	pub answer: Vec<DnsResource>,
+	pub answers: Vec<DnsResource>,
 
 	#[deku(count = "header.ns_count")]
 	pub authority: Vec<DnsResource>,
@@ -49,9 +52,9 @@ impl DnsPacket {
 				(remainder, label_byte) = u8::read(remainder, ())?;
 				name.push(label_byte);
 
-				let offset: u16 = (
-					((label_length as u16) << 8) + label_byte as u16
-				) & 0x3FFF;
+				let offset: u16 =
+					((label_length as u16) << 8) + label_byte as u16;
+				//& 0x3FFF;
 
 				// TODO: Use an enum of Vec<u8>, *ptr to domain name
 				event!(Level::INFO, "Domain name at offset={}", offset);
@@ -71,6 +74,34 @@ impl DnsPacket {
 
 		Ok((remainder, name))
 	}
+
+	pub fn print_response(&self) {
+
+		// TEMP
+		let serialized = serde_yaml::to_string(self).unwrap();
+		println!("serialized = {}", serialized);
+
+		let deserialized: DnsPacket = serde_yaml::from_str(&serialized).unwrap();
+		println!("deserialized = {:?}", deserialized);
+
+		println!("; <<>> Mud 0.0.1 <<>> TODO");
+		println!(";; global options: TODO");
+
+		println!(";; Got answer:");
+		self.header.print();
+
+		for q in self.questions.iter() { q.print(); }
+		for a in self.answers.iter() { a.print(); }
+		for a in self.authority.iter() { a.print(); }
+		for a in self.additional.iter() { a.print(); }
+
+		println!(";; STATS - TODO");
+		println!("");
+	}
+}
+
+// Static methods
+impl DnsPacket {
 
 	pub fn new_question(opts: &MudOpts) -> DnsPacket {
 
@@ -92,32 +123,29 @@ impl DnsPacket {
 				ns_count: 0,
 				ar_count: 0,
 			},
-			question: vec![DnsQuestion {
-				qname: encode_domain(&opts.name),
+			questions: vec![DnsQuestion {
+				qname: DnsQuestion::encode_domain(&opts.name),
 				qtype: 0x0001,
 				qclass: 0x0001,
 			}],
-			answer: Vec::new(),
+			answers: Vec::new(),
 			authority: Vec::new(),
 			additional: Vec::new(),
 		}
 	}
 
-	pub fn print_response(&self) {
+	#[cfg(test)]
+	pub fn load_test_yaml(_file: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
 
-		println!("; <<>> Mud 0.0.1 <<>> TODO");
-		println!(";; global options: TODO");
+		//let mut file = std::fs::File::open(file)?;
+		//let mut yaml = String::new();
+		//file.read_to_string(&mut yaml)?;
 
-		println!(";; Got answer:");
-		self.header.print();
+		//let de = serde_yaml::Deserializer::from_str(&yaml);
 
-		for q in self.question.iter() { q.print(); }
-		for a in self.answer.iter() { a.print(); }
-		for a in self.authority.iter() { a.print(); }
-		for a in self.additional.iter() { a.print(); }
+		//println!("{:?}", de);
 
-		println!(";; TODO: STATS");
-		println!("");
+		Ok(vec![u8::MIN])
 	}
 }
 
@@ -127,31 +155,29 @@ mod tests {
 	use super::*;
 
 	#[test]
+	fn it_loads_a_yaml() {
+
+		let yaml = "tests/resources/packets/simple-question-answer.yml";
+
+		match DnsPacket::load_test_yaml(yaml) {
+
+			Ok(vecky) => assert_eq!(vecky[0], 0),
+			Err(e) => panic!("{}", e),
+		}
+	}
+
+	#[test]
 	fn it_creates_a_packet() {
 
 		let data: Vec<u8> = vec![
 
-			//// HEADER
-			0b0000_0001,
-			0b0100_0110,
-			0b1000_0001,
-			0b1000_0000,
-			0b0000_0000,
-			0b0000_0001,
-			0b0000_0000,
-			0b0000_0001,
-			0b0000_0000,
-			0b0000_0000,
-			0b0000_0000,
-			0b0000_0000,
+			//// Header
+			0x01, 0x46, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01,
+			0x00, 0x00, 0x00, 0x00,
 
-			//// QUESTION
+			//// Question
 			// www
-			0b0000_0011,
-			0b0111_0111,
-			0b0111_0111,
-			0b0111_0111,
-
+			0x03, 0x77, 0x77, 0x77,
 			// archlinux
 			0b0000_1001,
 			0b0110_0001,

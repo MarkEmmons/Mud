@@ -8,7 +8,7 @@ use crate::packet::DnsPacket;
 
 pub fn send_query(_opts: &MudOpts, packet: DnsPacket) -> Result<DnsPacket, std::fmt::Error> {
 
-	const BUF_MAX: usize = 4096;
+	const BUF_MAX: usize = 512;
 	let mut res  = [0; BUF_MAX];
 
 	let socket = UdpSocket::bind("0.0.0.0:1053")
@@ -18,7 +18,6 @@ pub fn send_query(_opts: &MudOpts, packet: DnsPacket) -> Result<DnsPacket, std::
 		.to_bytes()
 		.unwrap();
 
-	// TODO: Get correct buffer size for DNS records & handle records that exceed the length
 	if req.len() < BUF_MAX {
 
 		socket.send_to(req.as_ref(), "8.8.8.8:53")

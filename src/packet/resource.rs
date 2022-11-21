@@ -1,9 +1,10 @@
 use deku::prelude::*;
+use serde::{Serialize, Deserialize};
 
 use crate::packet::DnsPacket;
 
 #[deku_derive(DekuRead, DekuWrite)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[deku(endian = "big")]
 pub struct DnsResource {
 
