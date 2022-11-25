@@ -1,7 +1,6 @@
 use deku::prelude::*;
 use deku::bitvec::{BitSlice, Msb0};
 use serde::{Serialize, Deserialize};
-use tracing::{event, Level};
 
 use header::DnsHeader;
 use question::DnsQuestion;
@@ -13,7 +12,8 @@ pub mod header;
 pub mod question;
 pub mod resource;
 
-//pub mod name;
+#[cfg(test)]
+mod test_packets;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, DekuRead, DekuWrite)]
 pub struct DnsPacket {
@@ -35,54 +35,57 @@ pub struct DnsPacket {
 
 impl DnsPacket {
 
-	// See RFC 1035 - Section 4 for instructions on how domain names are encoded
-	pub fn read_name(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, Vec<u8>), DekuError> {
+	pub fn decode_domain(&self, domain: &Vec<u8>) -> String {
 
-		let mut label_byte: u8;
-		let mut name: Vec<u8> = Vec::new();
+		let mut result = String::new();
+		let mut bytes_to_read: u8 = 0;
 
-		let (mut remainder, mut label_length) = u8::read(rest, ())?;
-		name.push(label_length);
+		for (idx, byte) in domain.iter().enumerate() {
 
-		while label_length > 0 {
+			// Read character and continue
+			if bytes_to_read > 0 {
 
-			// Initial octet indicates a pointer, not a label
-			if label_length >= 0xC {
-
-				(remainder, label_byte) = u8::read(remainder, ())?;
-				name.push(label_byte);
-
-				let offset: u16 =
-					((label_length as u16) << 8) + label_byte as u16;
-				//& 0x3FFF;
-
-				// TODO: Use an enum of Vec<u8>, *ptr to domain name
-				event!(Level::INFO, "Domain name at offset={}", offset);
-				break;
+				result.push(*byte as char);
+				bytes_to_read -= 1;
+				continue;
 			}
 
-			// Read name from label
-			for _ in 0..label_length {
+			// Interpret
+			match *byte {
 
-				(remainder, label_byte) = u8::read(remainder, ())?;
-				name.push(label_byte);
-			}
+				// Null-byte
+				0x00 => break,
 
-			(remainder, label_length) = u8::read(remainder, ())?;
-			name.push(label_length);
-		}
+				// Pointer to domain
+				0xC0..=0xFF => {
 
-		Ok((remainder, name))
+					// Offset from start of the packet
+					let offset: usize = ((
+						((*byte as u16) << 8) + domain[idx+1] as u16
+					) & 0x3FFF) as usize;
+
+					return self.decode_domain(
+						&self
+							.to_bytes()
+							.unwrap()[offset..]
+							.to_vec()
+					);
+				},
+
+				// Length of next label
+				_ => {
+					bytes_to_read = *byte;
+					if result.len() > 0 {
+						result.push('.');
+					}
+				},
+			} // match *byte
+		} // for byte in domain.iter()
+
+		result
 	}
 
 	pub fn print_response(&self) {
-
-		// TEMP
-		let serialized = serde_yaml::to_string(self).unwrap();
-		println!("serialized = {}", serialized);
-
-		let deserialized: DnsPacket = serde_yaml::from_str(&serialized).unwrap();
-		println!("deserialized = {:?}", deserialized);
 
 		println!("; <<>> Mud 0.0.1 <<>> TODO");
 		println!(";; global options: TODO");
@@ -102,6 +105,40 @@ impl DnsPacket {
 
 // Static methods
 impl DnsPacket {
+
+	// See RFC 1035 - Section 4 for instructions on how domain names are encoded
+	pub fn read_name(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, Vec<u8>), DekuError> {
+
+		let mut label_byte: u8;
+		let mut name: Vec<u8> = Vec::new();
+
+		let (mut remainder, mut label_length) = u8::read(rest, ())?;
+		name.push(label_length);
+
+		while label_length > 0 {
+
+			// Indicates a pointer, not a label
+			if label_length >= 0xC {
+
+				(remainder, label_byte) = u8::read(remainder, ())?;
+				name.push(label_byte);
+
+				break;
+			}
+
+			// Read name from label
+			for _ in 0..label_length {
+
+				(remainder, label_byte) = u8::read(remainder, ())?;
+				name.push(label_byte);
+			}
+
+			(remainder, label_length) = u8::read(remainder, ())?;
+			name.push(label_length);
+		}
+
+		Ok((remainder, name))
+	}
 
 	pub fn new_question(opts: &MudOpts) -> DnsPacket {
 
@@ -124,7 +161,7 @@ impl DnsPacket {
 				ar_count: 0,
 			},
 			questions: vec![DnsQuestion {
-				qname: DnsQuestion::encode_domain(&opts.name),
+				qname: DnsPacket::encode_domain(&opts.name),
 				qtype: 0x0001,
 				qclass: 0x0001,
 			}],
@@ -134,18 +171,29 @@ impl DnsPacket {
 		}
 	}
 
-	#[cfg(test)]
-	pub fn load_test_yaml(_file: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+	pub fn encode_domain(domain: &str) -> Vec<u8> {
 
-		//let mut file = std::fs::File::open(file)?;
-		//let mut yaml = String::new();
-		//file.read_to_string(&mut yaml)?;
+		let mut qname: Vec<u8> = Vec::new();
 
-		//let de = serde_yaml::Deserializer::from_str(&yaml);
+		for label in domain.split('.') {
 
-		//println!("{:?}", de);
+			// Label Length
+			qname.push(label
+				.len()
+				.try_into()
+				.unwrap()
+			);
 
-		Ok(vec![u8::MIN])
+			// Label Bytes
+			for byte in label.bytes() {
+				qname.push(byte);
+			}
+		}
+
+		// Null-label
+		qname.push(0x0);
+
+		qname
 	}
 }
 
@@ -155,95 +203,89 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn it_loads_a_yaml() {
+	fn it_creates_a_packet_with_one_question_and_one_answer() {
 
-		let yaml = "tests/resources/packets/simple-question-answer.yml";
-
-		match DnsPacket::load_test_yaml(yaml) {
-
-			Ok(vecky) => assert_eq!(vecky[0], 0),
-			Err(e) => panic!("{}", e),
-		}
-	}
-
-	#[test]
-	fn it_creates_a_packet() {
-
-		let data: Vec<u8> = vec![
-
-			//// Header
-			0x01, 0x46, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01,
-			0x00, 0x00, 0x00, 0x00,
-
-			//// Question
-			// www
-			0x03, 0x77, 0x77, 0x77,
-			// archlinux
-			0b0000_1001,
-			0b0110_0001,
-			0b0111_0010,
-			0b0110_0011,
-			0b0110_1000,
-			0b0110_1100,
-			0b0110_1001,
-			0b0110_1110,
-			0b0111_0101,
-			0b0111_1000,
-
-			// org
-			0b0000_0011,
-			0b0110_1111,
-			0b0111_0010,
-			0b0110_0111,
-
-			// Null Byte
-			0b0000_0000,
-
-			// QType
-			0b0000_0000,
-			0b0000_0001,
-
-			// QClass
-			0b0000_0000,
-			0b0000_0001,
-
-			//// ANSWER
-			// Pointer to Q-name
-			0b1100_0000,
-			0b0000_1100,
-
-			// Atype
-			0b0000_0000,
-			0b0000_0001,
-
-			// Class
-			0b0000_0000,
-			0b0000_0001,
-
-			// TTL
-			0b0000_0000,
-			0b0000_0000,
-			0b0000_1010,
-			0b0100_0101,
-
-			// rdlength = 4
-			0b0000_0000,
-			0b0000_0100,
-
-			// rdata
-			0b0101_1111,
-			0b1101_1001,
-			0b1010_0011,
-			0b1111_0110,
-		];
+		let data = test_packets::simple_answer();
 
 		let ((rest, offset), packet) = DnsPacket::from_bytes(
 			(data.as_ref(), 0)
 		).unwrap();
 
-		println!("{:?}", packet);
+		assert_eq!(rest.len(), 0);
+		assert_eq!(offset, 0);
+
+		assert_eq!(packet.header.qd_count, 1);
+		assert_eq!(packet.header.an_count, 1);
+		assert_eq!(packet.header.ns_count, 0);
+		assert_eq!(packet.header.ar_count, 0);
+
+		let question_name = &packet.questions[0].qname;
+		let answer_name = &packet.answers[0].name;
+
+		assert_eq!(*question_name, vec![0x03, 0x77, 0x77, 0x77, 0x09, 0x61, 0x72, 0x63, 0x68, 0x6C, 0x69, 0x6E, 0x75, 0x78, 0x03, 0x6F, 0x72, 0x67, 0x00]);
+		assert_eq!(*answer_name, vec![0xC0, 0x0C]);
+
+		assert_eq!(packet.decode_domain(question_name), "www.archlinux.org");
+		assert_eq!(packet.decode_domain(answer_name), "www.archlinux.org");
+	}
+
+	#[test]
+	fn it_creates_a_packet_with_one_question_and_two_answers() {
+
+		let data = test_packets::double_answer();
+
+		let ((rest, offset), packet) = DnsPacket::from_bytes(
+			(data.as_ref(), 0)
+		).unwrap();
 
 		assert_eq!(rest.len(), 0);
 		assert_eq!(offset, 0);
+
+		assert_eq!(packet.header.qd_count, 1);
+		assert_eq!(packet.header.an_count, 2);
+		assert_eq!(packet.header.ns_count, 0);
+		assert_eq!(packet.header.ar_count, 0);
+
+		let question_name = &packet.questions[0].qname;
+		let answer_name1 = &packet.answers[0].name;
+		let answer_name2 = &packet.answers[1].name;
+
+		assert_eq!(*question_name, vec![0x03, 0x77, 0x77, 0x77, 0x09, 0x61, 0x72, 0x63, 0x68, 0x6C, 0x69, 0x6E, 0x75, 0x78, 0x03, 0x6F, 0x72, 0x67, 0x00]);
+		assert_eq!(*answer_name1, vec![0xC0, 0x0C]);
+		assert_eq!(*answer_name2, vec![0xC0, 0x0C]);
+
+		assert_eq!(packet.decode_domain(question_name), "www.archlinux.org");
+		assert_eq!(packet.decode_domain(answer_name1), "www.archlinux.org");
+		assert_eq!(packet.decode_domain(answer_name2), "www.archlinux.org");
+	}
+
+	#[test]
+	fn it_creates_a_packet_with_one_answer_and_one_authority() {
+
+		let data = test_packets::one_answer_one_authority();
+
+		let ((rest, offset), packet) = DnsPacket::from_bytes(
+			(data.as_ref(), 0)
+		).unwrap();
+
+		assert_eq!(rest.len(), 0);
+		assert_eq!(offset, 0);
+
+		assert_eq!(packet.header.qd_count, 1);
+		assert_eq!(packet.header.an_count, 1);
+		assert_eq!(packet.header.ns_count, 1);
+		assert_eq!(packet.header.ar_count, 0);
+
+		let question_name = &packet.questions[0].qname;
+		let answer_name = &packet.answers[0].name;
+		let auth_name = &packet.authority[0].name;
+
+		assert_eq!(*question_name, vec![0x03, 0x77, 0x77, 0x77, 0x09, 0x61, 0x72, 0x63, 0x68, 0x6C, 0x69, 0x6E, 0x75, 0x78, 0x03, 0x6F, 0x72, 0x67, 0x00]);
+		assert_eq!(*answer_name, vec![0xC0, 0x0C]);
+		assert_eq!(*auth_name, vec![0xC0, 0x0C]);
+
+		assert_eq!(packet.decode_domain(question_name), "www.archlinux.org");
+		assert_eq!(packet.decode_domain(answer_name), "www.archlinux.org");
+		assert_eq!(packet.decode_domain(auth_name), "www.archlinux.org");
 	}
 }
