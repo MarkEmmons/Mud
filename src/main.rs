@@ -6,7 +6,8 @@ use mud::client;
 use mud::opts::MudOpts;
 use mud::packet::DnsPacket;
 
-fn main() {
+#[tokio::main]
+async fn main() {
 
 	tracing_subscriber::fmt::init();
 
@@ -21,6 +22,7 @@ fn main() {
 
 	event!(Level::INFO, "Sending question packet.");
 	let response = client::send_query(&opts, packet)
+		.await
 		.expect("Failed to receive response");
 
 	event!(Level::INFO, "Printing response info.");

@@ -1,17 +1,17 @@
-use std::net::UdpSocket;
-
+use std::io::{Error, ErrorKind};
 use deku::prelude::*;
-//use tracing::{event, Level};
+use tokio::net::UdpSocket;
 
 use crate::opts::MudOpts;
 use crate::packet::DnsPacket;
 
-pub fn send_query(_opts: &MudOpts, packet: DnsPacket) -> Result<DnsPacket, std::fmt::Error> {
+pub async fn send_query(_opts: &MudOpts, packet: DnsPacket) -> std::io::Result<DnsPacket> {
 
 	const BUF_MAX: usize = 512;
 	let mut res  = [0; BUF_MAX];
 
 	let socket = UdpSocket::bind("0.0.0.0:1053")
+		.await
 		.expect("Could not bind to address");
 
 	let req = packet
@@ -21,9 +21,11 @@ pub fn send_query(_opts: &MudOpts, packet: DnsPacket) -> Result<DnsPacket, std::
 	if req.len() < BUF_MAX {
 
 		socket.send_to(req.as_ref(), "8.8.8.8:53")
+			.await
 			.expect("Could not send data");
 
 		let (number_of_bytes, _src_addr) = socket.recv_from(&mut res)
+			.await
 			.expect("Didn't receive data");
 
 		let ((rest, offset), result) = DnsPacket::from_bytes(
@@ -37,6 +39,6 @@ pub fn send_query(_opts: &MudOpts, packet: DnsPacket) -> Result<DnsPacket, std::
 
 	} else {
 
-		Err(std::fmt::Error)
+		Err(Error::new(ErrorKind::Other, "Invalid request length"))
 	}
 }
