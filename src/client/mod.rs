@@ -33,6 +33,7 @@ mod tests {
 			name: String::from("www.archlinux.org"),
 			query_type: String::from("ANY"),
 			protocol: String::from("udp"),
+			message_format: String::from("dig"),
 		};
 
 		let packet = DnsPacket::new_question(&opts);

@@ -26,5 +26,5 @@ async fn main() {
 		.expect("Failed to receive response");
 
 	event!(Level::INFO, "Printing response info.");
-	response.print_response();
+	response.print_response(opts.message_format);
 }

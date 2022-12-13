@@ -20,4 +20,8 @@ pub struct MudOpts {
 	/// The resource record type to query.
 	#[arg(short, long, default_value = "udp")]
 	pub protocol: String,
+
+	/// The resource record type to query.
+	#[arg(short, long, default_value = "dig")]
+	pub message_format: String,
 }

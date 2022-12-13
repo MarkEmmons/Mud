@@ -8,6 +8,7 @@ use resource::DnsResource;
 
 use crate::opts::MudOpts;
 
+pub mod formats;
 pub mod header;
 pub mod question;
 pub mod resource;
@@ -15,7 +16,11 @@ pub mod resource;
 #[cfg(test)]
 mod test_packets;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, DekuRead, DekuWrite)]
+#[derive(
+	Debug, PartialEq,
+	Serialize, Deserialize,
+	DekuRead, DekuWrite
+)]
 pub struct DnsPacket {
 
 	pub header: DnsHeader,
@@ -85,21 +90,16 @@ impl DnsPacket {
 		result
 	}
 
-	pub fn print_response(&self) {
+	pub fn print_response(&self, message_format: String) {
 
-		println!("; <<>> Mud 0.0.1 <<>> TODO");
-		println!(";; global options: TODO");
+		// TODO: separate serialize / print
+		match &message_format[..] {
 
-		println!(";; Got answer:");
-		self.header.print();
-
-		for q in self.questions.iter() { q.print(); }
-		for a in self.answers.iter() { a.print(); }
-		for a in self.authority.iter() { a.print(); }
-		for a in self.additional.iter() { a.print(); }
-
-		println!(";; STATS - TODO");
-		println!("");
+			"dig" => formats::dig::print_dig(self),
+			"json" => formats::json::print_json(self),
+			"yaml" => formats::yaml::print_yaml(self),
+			_ => panic!("Invalid message format: {}", message_format),
+		}
 	}
 }
 
