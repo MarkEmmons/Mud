@@ -1,0 +1,9 @@
+[package]
+name = "mud-lib"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+mud-cli = { version = "0.2.0", path = "../cli" }
+mud-client = { version = "0.2.0", path = "../client" }
+mud-packet = { version = "0.2.0", path = "../packet" }

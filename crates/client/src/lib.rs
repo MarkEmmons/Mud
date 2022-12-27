@@ -2,8 +2,11 @@ pub mod config;
 pub mod tcp_client;
 pub mod udp_client;
 
-use crate::opts::MudOpts;
-use crate::packet::DnsPacket;
+pub extern crate mud_cli as cli;
+pub extern crate mud_packet as packet;
+
+use cli::opts::MudOpts;
+use packet::DnsPacket;
 
 // TODO: Resolve nameserver from Windows registry
 
@@ -30,10 +33,12 @@ mod tests {
 		let opts = MudOpts {
 
 			server: String::from("127.0.0.1"),
+			port: 53,
 			name: String::from("www.archlinux.org"),
 			query_type: String::from("ANY"),
 			protocol: String::from("udp"),
 			message_format: String::from("dig"),
+			listen: false,
 		};
 
 		let packet = DnsPacket::new_question(&opts);

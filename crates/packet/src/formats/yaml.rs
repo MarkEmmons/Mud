@@ -1,4 +1,4 @@
-use crate::packet::DnsPacket;
+use crate::DnsPacket;
 
 pub fn print_yaml(packet: &DnsPacket) {
 

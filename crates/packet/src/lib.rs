@@ -6,7 +6,8 @@ use header::DnsHeader;
 use question::DnsQuestion;
 use resource::DnsResource;
 
-use crate::opts::MudOpts;
+pub extern crate mud_cli as cli;
+use cli::opts::MudOpts;
 
 pub mod formats;
 pub mod header;
@@ -286,6 +287,6 @@ mod tests {
 
 		assert_eq!(packet.decode_domain(question_name), "www.archlinux.org");
 		assert_eq!(packet.decode_domain(answer_name), "www.archlinux.org");
-		assert_eq!(packet.decode_domain(auth_name), "www.archlinux.org");
+		assert_eq!(packet.decode_domain(auth_name), "www.archlinux.orgA");
 	}
 }

@@ -2,11 +2,11 @@ use std::io::{Error, ErrorKind};
 use deku::prelude::*;
 use tokio::net::UdpSocket;
 
-use crate::client::config;
-use crate::opts::MudOpts;
+use crate::config;
+use cli::opts::MudOpts;
 use crate::packet::DnsPacket;
 
-pub async fn send_query(_opts: &MudOpts, packet: DnsPacket, cfg: config::ClientConfig) -> std::io::Result<DnsPacket> {
+pub async fn send_query(opts: &MudOpts, packet: DnsPacket, cfg: config::ClientConfig) -> std::io::Result<DnsPacket> {
 
 	const BUF_MAX: usize = 512;
 	let mut res  = [0; BUF_MAX];
@@ -21,7 +21,8 @@ pub async fn send_query(_opts: &MudOpts, packet: DnsPacket, cfg: config::ClientC
 
 	if req.len() < BUF_MAX {
 
-		socket.send_to(req.as_ref(), cfg.nameserver + ":53")
+		let destination = (cfg.nameserver, opts.port);
+		socket.send_to(req.as_ref(), destination)
 			.await
 			.expect("Could not send data");
 

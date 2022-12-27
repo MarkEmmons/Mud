@@ -1,7 +1,7 @@
 use deku::prelude::*;
 use serde::{Serialize, Deserialize};
 
-use crate::packet::DnsPacket;
+use crate::DnsPacket;
 
 #[deku_derive(DekuRead, DekuWrite)]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
