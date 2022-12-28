@@ -255,9 +255,6 @@ dependencies = [
  "clap",
  "deku",
  "mud-lib",
- "serde",
- "serde_json",
- "serde_yaml",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -267,16 +264,11 @@ dependencies = [
 name = "mud-client"
 version = "0.2.0"
 dependencies = [
- "clap",
  "deku",
  "mud-opts",
  "mud-packet",
- "serde",
- "serde_json",
- "serde_yaml",
  "tokio",
  "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -293,10 +285,6 @@ name = "mud-opts"
 version = "0.2.0"
 dependencies = [
  "clap",
- "deku",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -308,8 +296,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

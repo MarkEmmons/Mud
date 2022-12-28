@@ -7,8 +7,10 @@ edition = "2021"
 deku = "0.14.1"
 mud-opts = { version = "0.2.0", path = "../opts" }
 serde = { version = "1.0.147", features = ["derive"] }
-serde_json = "1.0.89"
-serde_yaml = "0.9.14"
-#tokio = { version = "1.22.0", features = ["full"] }
-tracing = "0.1.37"
-tracing-subscriber = "0.3.16"
+serde_json = { version = "1.0.89", optional = true }
+serde_yaml = { version = "0.9.14", optional = true }
+
+[features]
+default = ["json", "yaml"]
+json = ["serde_json"]
+yaml = ["serde_yaml"]

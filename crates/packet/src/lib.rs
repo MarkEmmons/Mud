@@ -97,7 +97,9 @@ impl DnsPacket {
 		match &message_format[..] {
 
 			"dig" => formats::dig::print_dig(self),
+			#[cfg(feature = "json")]
 			"json" => formats::json::print_json(self),
+			#[cfg(feature = "yaml")]
 			"yaml" => formats::yaml::print_yaml(self),
 			_ => panic!("Invalid message format: {}", message_format),
 		}
