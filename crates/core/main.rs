@@ -6,11 +6,6 @@ use mud_lib::opts::MudOpts;
 use mud_lib::client;
 use mud_lib::packet::DnsPacket;
 
-// TODO: Move this!
-use tokio::net::UdpSocket;
-use deku::prelude::*;
-//
-
 #[tokio::main]
 async fn main() {
 
@@ -24,29 +19,11 @@ async fn main() {
 
 	if opts.listen {
 
-		let socket = UdpSocket::bind("0.0.0.0:5353").await.unwrap();
-
-		loop {
-
-			// Listen on a host/port
-			let mut res = [0; 1024];
-			let (number_of_bytes, _addr) = socket.recv_from(&mut res).await.unwrap();
-
-			// When we get a message, try to serialize it to a DnsPacket
-			event!(Level::INFO, "Intercepted a packet.");
-			let ((_rest, _offset), packet) = DnsPacket::from_bytes(
-				(&res[..number_of_bytes], 0)
-			).unwrap();
-
-			// Send the DnsPacket like normal and print
-			event!(Level::INFO, "Sending the packet.");
-			let response = client::send_query(&opts, packet)
-				.await
-				.expect("Failed to receive response");
-
-			event!(Level::INFO, "Printing response info.");
-			response.print_response(opts.message_format.clone());
-		}
+		// TODO: Cleanup...
+		event!(Level::INFO, "Starting listen...");
+		client::listen(&opts)
+			.await
+			.expect("Failed while listening on 0.0.0.0:5353");
 
 	} else {
 

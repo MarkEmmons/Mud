@@ -10,6 +10,38 @@ use packet::DnsPacket;
 
 // TODO: Resolve nameserver from Windows registry
 
+// TODO: Move this!
+use tokio::net::UdpSocket;
+use deku::prelude::*;
+//
+
+pub async fn listen(opts: &MudOpts) -> std::io::Result<DnsPacket> {
+
+	let socket = UdpSocket::bind("0.0.0.0:5353").await.unwrap();
+
+	loop {
+
+		// Listen on a host/port
+		let mut res = [0; 1024];
+		let (number_of_bytes, _addr) = socket.recv_from(&mut res).await.unwrap();
+
+		// When we get a message, try to serialize it to a DnsPacket
+		//event!(Level::INFO, "Intercepted a packet.");
+		let ((_rest, _offset), packet) = DnsPacket::from_bytes(
+			(&res[..number_of_bytes], 0)
+		).unwrap();
+
+		// Send the DnsPacket like normal and print
+		//event!(Level::INFO, "Sending the packet.");
+		let response = send_query(&opts, packet)
+			.await
+			.expect("Failed to receive response");
+
+		//event!(Level::INFO, "Printing response info.");
+		response.print_response(opts.message_format.clone());
+	}
+}
+
 pub async fn send_query(opts: &MudOpts, packet: DnsPacket) -> std::io::Result<DnsPacket> {
 
 	let cfg = config::ClientConfig::new().await?;
