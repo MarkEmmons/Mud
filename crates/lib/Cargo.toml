@@ -4,6 +4,6 @@ version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-mud-cli = { version = "0.2.0", path = "../cli" }
 mud-client = { version = "0.2.0", path = "../client" }
+mud-opts = { version = "0.2.0", path = "../opts" }
 mud-packet = { version = "0.2.0", path = "../packet" }

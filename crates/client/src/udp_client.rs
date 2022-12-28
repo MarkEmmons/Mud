@@ -3,7 +3,7 @@ use deku::prelude::*;
 use tokio::net::UdpSocket;
 
 use crate::config;
-use cli::opts::MudOpts;
+use opts::MudOpts;
 use crate::packet::DnsPacket;
 
 pub async fn send_query(opts: &MudOpts, packet: DnsPacket, cfg: config::ClientConfig) -> std::io::Result<DnsPacket> {

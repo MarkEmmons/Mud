@@ -2,10 +2,10 @@ pub mod config;
 pub mod tcp_client;
 pub mod udp_client;
 
-pub extern crate mud_cli as cli;
+pub extern crate mud_opts as opts;
 pub extern crate mud_packet as packet;
 
-use cli::opts::MudOpts;
+use opts::MudOpts;
 use packet::DnsPacket;
 
 // TODO: Resolve nameserver from Windows registry

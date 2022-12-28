@@ -1,6 +1,6 @@
 use mud_lib::{
 	client,
-	cli::opts::MudOpts,
+	opts::MudOpts,
 	packet::DnsPacket
 };
 

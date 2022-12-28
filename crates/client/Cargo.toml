@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.0.19", features = ["derive"] }
 deku = "0.14.1"
-mud-cli = { version = "0.2.0", path = "../cli" }
+mud-opts = { version = "0.2.0", path = "../opts" }
 mud-packet = { version = "0.2.0", path = "../packet" }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.89"

@@ -6,8 +6,8 @@ use header::DnsHeader;
 use question::DnsQuestion;
 use resource::DnsResource;
 
-pub extern crate mud_cli as cli;
-use cli::opts::MudOpts;
+pub extern crate mud_opts as opts;
+use opts::MudOpts;
 
 pub mod formats;
 pub mod header;

@@ -9,9 +9,9 @@ name = "mud"
 
 [workspace]
 members = [
-	"crates/cli",
 	"crates/client",
 	"crates/lib",
+	"crates/opts",
 	"crates/packet",
 ]
 

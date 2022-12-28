@@ -3,7 +3,7 @@ use tokio::net::TcpStream;
 use tokio::io::{AsyncWriteExt, AsyncReadExt};
 use tracing::{event, Level};
 
-use cli::opts::MudOpts;
+use opts::MudOpts;
 use crate::packet::DnsPacket;
 
 pub async fn send_query(_opts: &MudOpts, packet: DnsPacket) -> std::io::Result<DnsPacket> {

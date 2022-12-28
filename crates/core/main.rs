@@ -2,7 +2,7 @@ use clap::Parser;
 use tracing::{event, span, Level};
 use tracing_subscriber;
 
-use mud_lib::cli::opts::MudOpts;
+use mud_lib::opts::MudOpts;
 use mud_lib::client;
 use mud_lib::packet::DnsPacket;
 
