@@ -253,7 +253,6 @@ name = "mud"
 version = "0.2.0"
 dependencies = [
  "clap",
- "deku",
  "mud-lib",
  "tokio",
  "tracing",
