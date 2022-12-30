@@ -4,7 +4,7 @@ Dig clone written in Rust.
 
 ## Installation
 
-Simply clone and run `cargo build`.
+Clone and run `cargo build`.
 
 ## Usage
 
